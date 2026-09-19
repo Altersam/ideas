@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F2C Control — интерактивный прототип</title>
+<style>
+:root{
+  --bg:#f3f5f7; --panel:#fff; --panel2:#f8fafb; --line:#dfe5e9;
+  --text:#1f2a33; --muted:#6e7a84; --accent:#3f7388; --accent-soft:#e8f0f3;
+  --green:#6d987b; --yellow:#c7a158; --red:#c87979; --blue:#728cb6; --purple:#8b7ba5;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:250px;background:#edf1f3;border-right:1px solid var(--line);
+  padding:18px 14px;position:fixed;inset:0 auto 0 0;overflow:auto
+}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.logo{width:42px;height:42px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800}
+.brand h1{font-size:17px;margin:0}.brand small{display:block;color:var(--muted);margin-top:2px}
+.navbtn{
+  width:100%;border:0;background:transparent;color:#53616b;display:flex;gap:9px;align-items:center;
+  padding:11px 12px;border-radius:9px;margin:3px 0;text-align:left
+}
+.navbtn:hover{background:#e2e8eb}.navbtn.active{background:#d8e4e9;color:#263840;font-weight:700}
+.side-note{margin-top:18px;background:#f7f9fa;border:1px solid var(--line);border-radius:11px;padding:11px}
+.side-note b{font-size:11px}.side-note p{font-size:9px;color:var(--muted);line-height:1.45;margin:5px 0 0}
+.main{margin-left:250px;width:calc(100% - 250px);padding:22px 26px 46px}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:800}
+h2{font-size:28px;margin:4px 0 0}
+.demo{font-size:10px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.tab{display:none}.tab.active{display:block}
+.toolbar{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);
+  padding:9px;border-radius:11px;margin-bottom:10px
+}
+.toolbar label{font-size:9px;color:var(--muted)}
+.segment{display:flex;gap:3px;background:#f1f4f6;padding:3px;border-radius:8px}
+.segment button{border:0;background:transparent;color:#5f6e78;font-size:10px;padding:6px 9px;border-radius:6px}
+.segment button.active{background:#fff;color:#263840;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.toolbar select{border:1px solid var(--line);background:#fff;color:var(--text);font-size:10px;padding:7px 8px;border-radius:8px}
+.hero{background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px;margin-bottom:10px}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:15px}
+.hero h3{font-size:24px;margin:3px 0 7px}.hero p{font-size:11px;line-height:1.5;color:var(--muted);margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}.tag{font-size:9px;padding:5px 7px;border-radius:999px;background:#f0f4f6;border:1px solid #dae3e7;color:#46606c}
+.arch{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.arch div{background:#f8fafb;border:1px solid var(--line);border-radius:8px;padding:9px;text-align:center;font-size:9px}.arch .wide{grid-column:span 4;background:#f0f5f7;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin:10px 0}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px}.kpi .label{font-size:9px;color:var(--muted)}.kpi .value{font-size:22px;font-weight:800;margin-top:4px}.kpi .trend{font-size:8px;margin-top:4px}
+.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--muted)}
+.section-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin:17px 0 8px}.section-head h3{font-size:16px;margin:0}.section-head span{font-size:9px;color:var(--muted)}
+.health-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.health{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px}.health b{font-size:20px}.health small{display:block;color:var(--muted);font-size:8px;margin-top:3px}.track{height:6px;background:#edf1f3;border-radius:99px;overflow:hidden;margin-top:7px}.track i{display:block;height:100%;background:var(--accent)}
+.grid3{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:9px}.grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:9px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.card h4{font-size:12px;margin:0 0 4px}.sub{font-size:8px;color:var(--muted);margin-bottom:7px}
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:9px;font-size:8px;color:var(--muted);margin-top:5px}.legend span:before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--c);margin-right:4px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:790px;background:#fff}th,td{font-size:9px;padding:8px 9px;border-bottom:1px solid #edf0f2;text-align:left}th{background:#f6f8f9;color:#55636d}
+.bar{height:6px;background:#edf1f3;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+.alert{display:flex;gap:7px;padding:7px 0;border-top:1px solid #eef1f3;font-size:9px}.alert:first-child{border-top:0}.dot{width:7px;height:7px;border-radius:50%;margin-top:3px;flex:none}.red{background:var(--red)}.yellow{background:var(--yellow)}.green{background:var(--green)}.blue{background:var(--blue)}
+.module-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.module{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;text-align:left}.module:hover{border-color:#b9c9d0}.module h4{font-size:12px;margin:7px 0 4px}.module p{font-size:9px;color:var(--muted);line-height:1.45;margin:0}.module .mini{font-size:8px;color:#4e626d;margin-top:7px}
+.detail{display:none;margin-top:10px}.detail.show{display:block}
+.detail-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:9px}.detail-toolbar select{font-size:9px;padding:6px 7px;border:1px solid var(--line);border-radius:7px;background:#fff}.ghost{border:1px solid var(--line);background:#fff;color:#4d5d67;border-radius:7px;padding:6px 8px;font-size:9px}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.metric{background:#f8fafb;border:1px solid var(--line);border-radius:9px;padding:9px}.metric span{font-size:8px;color:var(--muted);display:block}.metric b{font-size:17px;display:block;margin-top:3px}
+.matrix{display:grid;grid-template-columns:74px repeat(8,1fr);gap:3px;font-size:8px}.matrix .h{text-align:center;color:var(--muted)}.matrix .r{color:var(--muted)}.matrix .c{height:20px;border-radius:3px;background:#eef1f3}
+.calc-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:10px}.controls{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.control{margin:11px 0}.control label{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:9px;margin-bottom:5px}.control output{font-weight:800;color:var(--text)}input[type=range]{width:100%;accent-color:var(--accent)}
+.results{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.result{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px}.result span{font-size:8px;color:var(--muted)}.result b{display:block;font-size:18px;margin-top:3px}
+.scenarios{display:flex;gap:5px;margin-bottom:9px}.scenarios button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 9px;font-size:9px}.scenarios button.active{background:var(--accent-soft);border-color:#c5d8df;font-weight:700}
+.funnel{display:flex;flex-direction:column;gap:5px;align-items:center}.funnel div{height:25px;color:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:8px}
+.gantt{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px}.ghead,.grow{display:grid;grid-template-columns:220px repeat(24,28px);gap:3px;align-items:center;min-width:930px}.ghead{font-size:8px;color:var(--muted);margin-bottom:5px}.grow{margin:4px 0}.glabel{font-size:9px}.gcell{height:19px;border-radius:3px;background:#f0f2f4}.gcell.dev{background:#7896a5}.gcell.pilot{background:#a58f67}.gcell.sales{background:#7289ad}.gcell.ops{background:#7d9984}
+.phase-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:9px}.phase{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}.phase b{display:block;font-size:10px}.phase small{font-size:8px;color:var(--muted);line-height:1.4}
+.packages{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.package{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px}.package.featured{border-color:#9fb6c1}.package .price{font-size:24px;font-weight:800;margin-top:6px}.package ul{font-size:9px;color:var(--muted);line-height:1.55;padding-left:15px}
+.notice{font-size:8px;color:var(--muted);line-height:1.45}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(4,1fr)}.health-grid{grid-template-columns:repeat(3,1fr)}.grid3{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,1fr)}.results{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.sidebar{position:static;width:100%}.app{display:block}.main{margin:0;width:100%;padding:14px}.hero-grid,.grid2,.calc-layout,.packages{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.health-grid,.module-grid,.results,.phase-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="app" id="f2cApp">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">F2C</div><div><h1>F2C Control</h1><small>операционная аналитика школы</small></div></div>
+  <button class="navbtn active" type="button" data-tab="overview">▦ Аналитика</button>
+  <button class="navbtn" type="button" data-tab="modules">◫ Интерактивные дашборды</button>
+  <button class="navbtn" type="button" data-tab="timeline">▤ Сроки и этапы разработки</button>
+  <button class="navbtn" type="button" data-tab="calculator">₽ Калькулятор продаж</button>
+  <button class="navbtn" type="button" data-tab="sales">↗ Продажи и человеко‑часы</button>
+  <button class="navbtn" type="button" data-tab="packages">◈ Пакеты</button>
+  <div class="side-note"><b>Разработка</b><p>2 IT-инженера + ИИ-ассистирование. Основная цель — максимальная стандартизация интеграций, чтобы продукт не превращался в индивидуальный проект для каждой школы.</p></div>
+</aside>
+
+<main class="main">
+  <div class="topbar"><div><div class="eyebrow">Interactive product prototype</div><h2 id="pageTitle">Аналитика</h2></div><div class="demo">Демо-данные · 2026/27</div></div>
+
+  <section class="tab active" data-tab-panel="overview">
+    <div class="toolbar">
+      <label>Период</label>
+      <div class="segment" id="periodSegment">
+        <button type="button" class="active" data-period="day">Сегодня</button>
+        <button type="button" data-period="week">Неделя</button>
+        <button type="button" data-period="month">Месяц</button>
+        <button type="button" data-period="term">Четверть</button>
+      </div>
+      <label for="buildingSelect">Корпус</label>
+      <select id="buildingSelect"><option value="all">Все корпуса</option><option value="main">Главный</option><option value="second">Корпус №2</option><option value="lab">Лабораторный</option></select>
+      <label for="gradeSelect">Параллель</label>
+      <select id="gradeSelect"><option value="all">Все классы</option><option value="8">8 классы</option><option value="9">9 классы</option><option value="10">10 классы</option><option value="11">11 классы</option></select>
+    </div>
+
+    <div class="hero"><div class="hero-grid">
+      <div><div class="eyebrow">Школа сейчас</div><h3>Одна панель вместо нескольких разрозненных систем</h3><p>Фильтры выше меняют все основные показатели и графики. В реальном продукте данные приходят из электронного журнала, СКУД, расписания, IT-мониторинга и других источников.</p><div class="tags"><span class="tag">СКУД</span><span class="tag">ЭЖ</span><span class="tag">Расписание</span><span class="tag">Кабинеты</span><span class="tag">Печать</span><span class="tag">IT</span><span class="tag">AI-сводки</span></div></div>
+      <div class="arch"><div>ЭЖ</div><div>СКУД</div><div>Расписание</div><div>SNMP / IT</div><div class="wide">F2C Data Layer · история · правила · роли</div><div>Директор</div><div>Завуч</div><div>IT / АХО</div><div>Informator</div></div>
+    </div></div>
+
+    <div class="kpis" id="kpiGrid"></div>
+
+    <div class="section-head"><h3>Карта здоровья школы</h3><span id="scopeText">Все корпуса · все классы · сегодня</span></div>
+    <div class="health-grid" id="healthGrid"></div>
+
+    <div class="section-head"><h3>Ключевая аналитика</h3><span>графики обновляются от выбранного фильтра</span></div>
+    <div class="grid3">
+      <div class="card"><h4>Присутствие по времени</h4><div class="sub">факт и базовая линия</div><svg class="chart" id="presenceChart" viewBox="0 0 560 205"></svg><div class="legend"><span style="--c:#3f7388">выбранный срез</span><span style="--c:#b3bdc3">среднее</span></div></div>
+      <div class="card"><h4>Посещаемость ↔ средний балл</h4><div class="sub">связь по классам</div><svg class="chart" id="scatterChart" viewBox="0 0 330 205"></svg><div class="notice">Корреляция помогает искать закономерности, но сама по себе не доказывает причинность.</div></div>
+      <div class="card"><h4>Опоздания по времени</h4><div class="sub">распределение входов после звонка</div><svg class="chart" id="lateChart" viewBox="0 0 330 205"></svg><div class="notice" id="lateInsight"></div></div>
+    </div>
+
+    <div class="section-head"><h3>Загрузка помещений</h3><span>тепловая карта по урокам</span></div>
+    <div class="card"><div class="matrix" id="roomMatrix"></div><div class="notice" id="roomInsight" style="margin-top:8px"></div></div>
+
+    <div class="section-head"><h3>Сравнение параллелей</h3><span>таблица меняется по выбранному корпусу и периоду</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Параллель</th><th>Посещаемость</th><th>Опоздания</th><th>Средний балл</th><th>ДЗ / день</th><th>Загрузка кабинетов</th><th>Доля двоек</th><th>Сигнал</th></tr></thead><tbody id="gradeTable"></tbody></table></div>
+
+    <div class="grid2" style="margin-top:9px">
+      <div class="card"><h4>Сигналы и аномалии</h4><div id="alertsBox"></div></div>
+      <div class="card"><h4>Экономика печати</h4><svg class="chart" id="printChart" viewBox="0 0 390 180"></svg><div class="notice" id="printInsight"></div></div>
+    </div>
+  </section>
+
+  <section class="tab" data-tab-panel="modules">
+    <div class="section-head"><h3>Интерактивные дашборды</h3><span>выберите модуль — откроется отдельный рабочий экран</span></div>
+    <div class="module-grid" id="moduleGrid"></div>
+    <div class="detail" id="detailPanel">
+      <div class="card">
+        <div class="section-head" style="margin-top:0"><h3 id="detailTitle">Модуль</h3><span id="detailCaption"></span></div>
+        <div class="detail-toolbar">
+          <label for="detailPeriod" class="sub" style="margin:0">Период</label>
+          <select id="detailPeriod"><option value="day">Сегодня</option><option value="week">Неделя</option><option value="month">Месяц</option><option value="term">Четверть</option></select>
+          <button class="ghost" type="button" id="detailRefresh">Обновить данные</button>
+          <button class="ghost" type="button" id="detailClose">Закрыть</button>
+        </div>
+        <div class="metric-grid" id="detailMetrics"></div>
+        <div class="grid2" style="margin-top:9px">
+          <div class="card"><h4>Динамика показателя</h4><svg class="chart" id="detailChart" viewBox="0 0 520 180"></svg></div>
+          <div class="card"><h4>Расшифровка</h4><div id="detailNotes"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" data-tab-panel="timeline">
+    <div class="hero"><div class="eyebrow">Команда: 2 IT-инженера + ИИ</div><h3>Сроки и этапы разработки</h3><p>Шкала — недели. ИИ ускоряет программирование, SQL, тесты, документацию и прототипирование интерфейсов, но интеграции и валидация данных всё равно требуют инженерной работы.</p></div>
+    <div class="gantt"><div class="ghead" id="ganttHead"></div><div id="ganttRows"></div></div>
+    <div class="phase-grid"><div class="phase"><b>1–2 нед. · прототип</b><small>архитектура, UX, KPI, модель данных</small></div><div class="phase"><b>3–8 нед. · MVP</b><small>ЭЖ, СКУД, расписание, роли, 5–7 экранов</small></div><div class="phase"><b>9–12 нед. · пилот</b><small>живая школа, сверка данных, исправления</small></div><div class="phase"><b>13–16 нед. · product-ready</b><small>логи, backup, документы, стандартизированный деплой</small></div></div>
+    <div class="results" style="margin-top:9px"><div class="result"><span>Рабочий MVP</span><b>8–10 нед.</b></div><div class="result"><span>Пилот</span><b>12 нед.</b></div><div class="result"><span>Product-ready</span><b>16 нед.</b></div><div class="result"><span>Разработка</span><b>≈1 180 ч</b></div></div>
+  </section>
+
+  <section class="tab" data-tab-panel="calculator">
+    <div class="scenarios" id="scenarioTabs"><button type="button" class="active" data-scenario="base">Базовый</button><button type="button" data-scenario="safe">Консервативный</button><button type="button" data-scenario="growth">Рост</button></div>
+    <div class="calc-layout">
+      <div class="controls">
+        <div class="eyebrow">Интерактивная модель</div><h3 style="margin:4px 0 8px;font-size:17px">Калькулятор продаж</h3>
+        <div class="control"><label>Количество школ <output id="schoolsOut"></output></label><input id="schoolsRange" type="range" min="1" max="1000" value="50"></div>
+        <div class="control"><label>Средний чек первого года <output id="checkOut"></output></label><input id="checkRange" type="range" min="150000" max="700000" step="10000" value="349000"></div>
+        <div class="control"><label>Годовое продление <output id="renewOut"></output></label><input id="renewRange" type="range" min="60000" max="300000" step="5000" value="169000"></div>
+        <div class="control"><label>Конверсия квалифицированного лида <output id="convOut"></output></label><input id="convRange" type="range" min="3" max="35" value="12"></div>
+        <div class="control"><label>Себестоимость внедрения <output id="costOut"></output></label><input id="costRange" type="range" min="30000" max="180000" step="5000" value="80000"></div>
+        <div class="control"><label>Маркетинг / контракт <output id="cacOut"></output></label><input id="cacRange" type="range" min="0" max="150000" step="5000" value="35000"></div>
+      </div>
+      <div>
+        <div class="results"><div class="result"><span>Выручка 1 года</span><b id="rev1"></b></div><div class="result"><span>ARR</span><b id="arr"></b></div><div class="result"><span>Валовой вклад</span><b id="gross"></b></div><div class="result"><span>Квалифицированных лидов</span><b id="leadCount"></b></div></div>
+        <div class="grid2" style="margin-top:8px">
+          <div class="card"><h4>Воронка</h4><div class="funnel"><div id="funnel1" style="width:100%;background:#9aa6ad"></div><div id="funnel2" style="width:78%;background:#8799a4"></div><div id="funnel3" style="width:55%;background:#6f8998"></div><div id="funnel4" style="width:36%;background:#3f7388"></div></div></div>
+          <div class="card"><h4>Unit economics</h4><div class="metric-grid" style="grid-template-columns:1fr 1fr"><div class="metric"><span>Вклад / школа</span><b id="unitMargin"></b></div><div class="metric"><span>CAC</span><b id="cacCard"></b></div><div class="metric"><span>Окупаемость CAC</span><b id="payback"></b></div><div class="metric"><span>LTV 3 года*</span><b id="ltv"></b></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="section-head"><h3>Масштабирование</h3><span>те же параметры для разного числа школ</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Школ</th><th>Выручка 1 год</th><th>ARR</th><th>Внедрение</th><th>Маркетинг</th><th>Валовой вклад</th></tr></thead><tbody id="scaleTable"></tbody></table></div>
+    <div class="notice" style="margin-top:7px">* LTV — упрощённая модель: первый год + два продления, без дисконтирования и оттока.</div>
+  </section>
+
+  <section class="tab" data-tab-panel="sales">
+    <div class="hero"><div class="eyebrow">Go-to-market</div><h3>Продажи и человеко‑часы</h3><p>Ползунки показывают, насколько быстро два инженера становятся ограничением при росте продаж. Это помогает понять, когда нужно автоматизировать внедрение или расширять команду.</p></div>
+    <div class="controls">
+      <div class="control"><label>План контрактов за год <output id="dealsOut"></output></label><input id="dealsRange" type="range" min="5" max="200" step="5" value="50"></div>
+      <div class="control"><label>Стоимость человеко-часа <output id="hourOut"></output></label><input id="hourRange" type="range" min="1000" max="4000" step="100" value="1800"></div>
+    </div>
+    <div class="table-wrap" style="margin-top:9px"><table><thead><tr><th>Этап</th><th>Роль</th><th>Часы / школа</th><th id="hoursHeader">Для 50 школ</th></tr></thead><tbody id="hoursBody"></tbody></table></div>
+    <div class="results" style="margin-top:9px"><div class="result"><span>Часы / школа</span><b id="hoursPerSchool"></b></div><div class="result"><span>Всего часов</span><b id="hoursTotal"></b></div><div class="result"><span>FTE-месяцев</span><b id="fteMonths"></b></div><div class="result"><span>Стоимость труда</span><b id="laborCost"></b></div></div>
+  </section>
+
+  <section class="tab" data-tab-panel="packages">
+    <div class="packages"><div class="package"><div class="eyebrow">Старт</div><h3>F2C Пульс</h3><div class="price">189 000 ₽</div><div class="sub">первый год</div><ul><li>ЭЖ, расписание, оценки, ДЗ</li><li>главный экран директора</li><li>5–6 дашбордов</li><li>еженедельная сводка</li></ul></div><div class="package featured"><div class="eyebrow">Основной</div><h3>F2C Control</h3><div class="price">349 000 ₽</div><div class="sub">первый год</div><ul><li>всё из «Пульс»</li><li>СКУД и опоздания</li><li>кабинеты / корпуса</li><li>Print / IT monitoring</li><li>12–15 дашбордов</li></ul></div><div class="package"><div class="eyebrow">Расширенный</div><h3>F2C Control 360</h3><div class="price">589 000 ₽</div><div class="sub">первый год</div><ul><li>мультикорпусность</li><li>AI-сводки</li><li>IoT</li><li>публичные панели</li><li>индивидуальные интеграции</li></ul></div></div>
+  </section>
+</main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const root=document.getElementById('f2cApp');
+  const $=(sel)=>root.querySelector(sel);
+  const $$=(sel)=>Array.from(root.querySelectorAll(sel));
+  const state={tab:'overview',period:'day',building:'all',grade:'all',module:null,detailPeriod:'day'};
+
+  const pageTitles={overview:'Аналитика',modules:'Интерактивные дашборды',timeline:'Сроки и этапы разработки',calculator:'Калькулятор продаж',sales:'Продажи и человеко‑часы',packages:'Пакеты'};
+  $$('.navbtn').forEach(btn=>btn.addEventListener('click',()=>{
+    state.tab=btn.dataset.tab;
+    $$('.navbtn').forEach(x=>x.classList.toggle('active',x===btn));
+    $$('[data-tab-panel]').forEach(p=>p.classList.toggle('active',p.dataset.tabPanel===state.tab));
+    $('#pageTitle').textContent=pageTitles[state.tab];
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+
+  const periods={
+    day:{name:'сегодня',presence:[70,180,540,990,1240,1319,1280,1210,1050,760,420,220],late:[8,18,13,7,4,2],print:[52,61,68,75,87,94]},
+    week:{name:'за неделю',presence:[68,176,525,970,1215,1290,1262,1195,1020,742,408,215],late:[42,71,55,31,18,9],print:[48,55,63,71,79,87]},
+    month:{name:'за месяц',presence:[66,171,510,944,1185,1260,1235,1170,998,720,395,208],late:[173,288,219,118,60,29],print:[44,51,58,66,74,87]},
+    term:{name:'за четверть',presence:[64,164,495,918,1150,1225,1204,1142,965,692,381,201],late:[560,940,712,405,205,109],print:[39,46,53,61,70,82]}
+  };
+  const buildingFactor={all:1,main:.66,second:.25,lab:.09};
+  const gradeFactor={all:1,'8':.25,'9':.24,'10':.27,'11':.24};
+  const gradeNames={all:'все классы','8':'8 классы','9':'9 классы','10':'10 классы','11':'11 классы'};
+  const buildingNames={all:'Все корпуса',main:'Главный корпус',second:'Корпус №2',lab:'Лабораторный'};
+
+  function scopeFactor(){return buildingFactor[state.building]*gradeFactor[state.grade];}
+  function fmt(n){return Math.round(n).toLocaleString('ru-RU');}
+  function rub(n){return Math.round(n).toLocaleString('ru-RU')+' ₽';}
+
+  function lineChart(svg,values,baseline){
+    const W=560,H=205,L=38,R=12,T=15,B=28;
+    const max=Math.max(...values,...baseline)*1.08;
+    const x=i=>L+i*(W-L-R)/(values.length-1);
+    const y=v=>T+(max-v)*(H-T-B)/max;
+    const pts=values.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    const bpts=baseline.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    let grid=''; for(let i=0;i<4;i++){const yy=T+i*(H-T-B)/3;grid+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#edf0f2"/>`;}
+    const labs=['07','09','11','13','15','17'].map((t,i)=>`<text x="${L+i*(W-L-R)/5}" y="${H-8}" fill="#7b8790" font-size="9" text-anchor="middle">${t}</text>`).join('');
+    svg.innerHTML=`${grid}<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#dbe1e5"/>${labs}<polyline points="${bpts}" fill="none" stroke="#b4bec4" stroke-width="2" stroke-dasharray="5 5"/><polyline points="${pts}" fill="none" stroke="#3f7388" stroke-width="3"/>`;
+  }
+
+  function scatter(svg,factor){
+    const pts=[[89,3.72],[90.5,3.84],[91.8,3.96],[92.3,4.02],[93.7,4.08],[94.4,4.15],[95.2,4.21],[96,4.26],[97,4.35],[98,4.43]];
+    const W=330,H=205,L=38,R=14,T=16,B=30;
+    const x=v=>L+(v-88)*(W-L-R)/11;
+    const y=v=>T+(4.6-v)*(H-T-B)/(4.6-3.5);
+    let circles=pts.map((p,i)=>`<circle cx="${x(p[0])}" cy="${y(p[1]+(factor-1)*.06)}" r="5" fill="#728cb6" opacity=".82"/>`).join('');
+    svg.innerHTML=`<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#dbe1e5"/><line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="#dbe1e5"/>${circles}<line x1="${x(89)}" y1="${y(3.7)}" x2="${x(98)}" y2="${y(4.45)}" stroke="#728cb6" stroke-width="2" stroke-dasharray="4 4"/><text x="${x(89)}" y="${H-10}" font-size="9" fill="#7b8790">89%</text><text x="${x(94)}" y="${H-10}" font-size="9" fill="#7b8790">94%</text><text x="${x(98)}" y="${H-10}" font-size="9" fill="#7b8790">98%</text>`;
+  }
+
+  function barChart(svg,values){
+    const W=330,H=205,L=28,R=10,T=15,B=34,max=Math.max(...values)*1.15;
+    const bw=(W-L-R)/values.length*0.55,gap=(W-L-R)/values.length;
+    const labels=['08:30','08:40','08:50','09:00','09:10','09:20'];
+    let bars='';
+    values.forEach((v,i)=>{
+      const h=(v/max)*(H-T-B),x=L+i*gap+(gap-bw)/2,y=H-B-h;
+      bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="#c7a158"/><text x="${x+bw/2}" y="${H-12}" font-size="8" fill="#7b8790" text-anchor="middle">${labels[i]}</text>`;
+    });
+    svg.innerHTML=`<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#dbe1e5"/>${bars}`;
+  }
+
+  function printChart(svg,values){
+    const W=390,H=180,L=25,R=12,T=15,B=28,max=Math.max(...values)*1.15;
+    const labels=['Апр','Май','Июн','Авг','Сен','Прогноз'], gap=(W-L-R)/values.length,bw=34;
+    let bars='';
+    values.forEach((v,i)=>{
+      const h=v/max*(H-T-B),x=L+i*gap+(gap-bw)/2,y=H-B-h;
+      bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="#7c97a4"/><text x="${x+bw/2}" y="${H-10}" font-size="8" fill="#7b8790" text-anchor="middle">${labels[i]}</text>`;
+    });
+    svg.innerHTML=bars;
+  }
+
+  function renderOverview(){
+    const f=scopeFactor(), p=periods[state.period];
+    const people=Math.max(12,1284*f);
+    const attendance=Math.max(82,94.5-(state.building==='lab'?1.2:0)-(state.grade==='8'?2.3:state.grade==='11'?-1.7:0)+(state.period==='week'?-0.6:state.period==='month'?-1.1:state.period==='term'?-1.7:0));
+    const late=Math.max(1,p.late.reduce((a,b)=>a+b,0)*f*.82);
+    const grade=(4.17+(state.grade==='11'?.16:state.grade==='8'?-.23:0)+(state.period==='term'?-.08:0)).toFixed(2).replace('.',',');
+    const homework=Math.max(8,287*f*(state.period==='day'?1:state.period==='week'?5:state.period==='month'?20:55));
+    const occupancy=Math.round(82-(state.building==='lab'?25:state.building==='second'?7:0));
+    const print=Math.max(2,87*f*(state.period==='day'?1:state.period==='week'?.25:state.period==='month'?1:3.2));
+    const signals=Math.max(1,Math.round(8*f*(state.period==='day'?1:state.period==='week'?4:state.period==='month'?14:48)));
+
+    const kpis=[
+      ['В школе / срез',fmt(people),'обновление в реальном времени','neutral'],
+      ['Посещаемость',attendance.toFixed(1).replace('.',',')+'%',attendance>=94?'выше базовой линии':'ниже базовой линии',attendance>=94?'up':'down'],
+      ['Опоздания',fmt(late),state.period==='day'?'с начала дня':'за выбранный период','down'],
+      ['Средний балл',grade,'по выставленным оценкам','up'],
+      ['Домашние задания',fmt(homework),state.period==='day'?'на ближайший день':'за период','neutral'],
+      ['Загрузка кабинетов',occupancy+'%',occupancy<60?'есть резерв помещений':'в рабочем диапазоне',occupancy<60?'down':'up'],
+      ['Печать',print.toFixed(0)+'k','условный объём страниц','neutral'],
+      ['Сигналы',fmt(signals),Math.max(1,Math.round(signals*.25))+' требуют внимания','down']
+    ];
+    $('#kpiGrid').innerHTML=kpis.map(x=>`<div class="kpi"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="trend ${x[3]}">${x[2]}</div></div>`).join('');
+
+    const health=[
+      ['Посещаемость',Math.round(attendance)],['Учебная динамика',Math.round(86+(state.grade==='11'?5:state.grade==='8'?-5:0))],
+      ['Нагрузка ДЗ',Math.round(72+(state.grade==='9'?-8:4))],['Помещения',Math.max(50,occupancy)],
+      ['IT-инфраструктура',state.building==='lab'?92:96],['Ресурсы / печать',state.period==='term'?73:78]
+    ];
+    $('#healthGrid').innerHTML=health.map(x=>`<div class="health"><b>${x[1]}</b><small>${x[0]}</small><div class="track"><i style="width:${x[1]}%"></i></div></div>`).join('');
+    $('#scopeText').textContent=`${buildingNames[state.building]} · ${gradeNames[state.grade]} · ${p.name}`;
+
+    const actual=p.presence.map(v=>v*f);
+    const baseline=p.presence.map((v,i)=>v*f*(.96+(i%3)*.015));
+    lineChart($('#presenceChart'),actual,baseline);
+    scatter($('#scatterChart'),f);
+    barChart($('#lateChart'),p.late.map(v=>Math.max(1,v*f)));
+    $('#lateInsight').textContent=`Пик опозданий приходится на 08:35–08:50. В выбранном срезе — около ${fmt(late)} опозданий.`;
+    printChart($('#printChart'),p.print.map(v=>v*Math.max(.2,f)));
+    $('#printInsight').textContent=`Прогноз расхода печати в выбранном срезе: около ${rub(print*2200)}. Можно отслеживать стоимость страницы, тонер и аномальный рост печати.`;
+
+    renderRoomMatrix(occupancy);
+    renderGradeTable(attendance,occupancy);
+    renderAlerts(attendance,late,occupancy);
+  }
+
+  function renderRoomMatrix(occupancy){
+    const names=state.building==='all'?['Главный','Корпус 2','Лаборат.']:[buildingNames[state.building]];
+    let html='<div></div>'+Array.from({length:8},(_,i)=>`<div class="h">${i}</div>`).join('');
+    names.forEach((n,ri)=>{
+      html+=`<div class="r">${n}</div>`;
+      for(let i=0;i<8;i++){
+        const v=Math.max(18,Math.min(96,occupancy-20+Math.sin((i+ri)*.9)*22+(i>=2&&i<=5?18:0)));
+        const alpha=(v/100*.55+.12).toFixed(2);
+        html+=`<div class="c" title="${Math.round(v)}% загрузки" style="background:rgba(63,115,136,${alpha})"></div>`;
+      }
+    });
+    $('#roomMatrix').innerHTML=html;
+    $('#roomInsight').textContent=occupancy<60?'В выбранном корпусе заметный резерв помещений: можно анализировать перераспределение расписания.':'Пиковая загрузка приходится на 3–5 уроки; отдельные кабинеты можно анализировать глубже.';
+  }
+
+  function renderGradeTable(attendance,occupancy){
+    const base=[
+      ['8 классы',attendance-3.1,18,3.94,4.8,Math.max(40,occupancy-4),7.8,'↓ посещаемость'],
+      ['9 классы',attendance-0.7,11,4.08,5.4,Math.max(40,occupancy+1),5.1,'↑ нагрузка ДЗ'],
+      ['10 классы',attendance+1.1,9,4.21,4.1,Math.max(40,occupancy+4),3.4,'норма'],
+      ['11 классы',attendance+2.2,5,4.33,3.9,Math.max(40,occupancy-8),2.7,'норма']
+    ];
+    const filtered=state.grade==='all'?base:base.filter(r=>r[0].startsWith(state.grade));
+    $('#gradeTable').innerHTML=filtered.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1].toFixed(1).replace('.',',')}%</b></td><td>${r[2]}</td><td>${r[3].toFixed(2).replace('.',',')}</td><td>${r[4]}</td><td><div class="bar"><i style="width:${r[5]}%"></i></div></td><td>${r[6]}%</td><td style="color:${r[7]==='норма'?'#6d987b':'#b07f45'}">${r[7]}</td></tr>`).join('');
+  }
+
+  function renderAlerts(attendance,late,occupancy){
+    const list=[];
+    if(attendance<93)list.push(['red','Посещаемость ниже целевого уровня',`Текущий срез: ${attendance.toFixed(1).replace('.',',')}%.`]);
+    else list.push(['green','Посещаемость в рабочем диапазоне',`Текущий срез: ${attendance.toFixed(1).replace('.',',')}%.`]);
+    if(late>20)list.push(['yellow','Повышенное число опозданий',`${fmt(late)} случаев в выбранном периоде.`]);
+    if(occupancy<65)list.push(['blue','Есть резерв помещений',`Средняя загрузка около ${occupancy}%.`]);
+    else list.push(['blue','Высокая загрузка кабинетов',`Средняя загрузка около ${occupancy}%.`]);
+    list.push(['yellow','МФУ учительской: тонер 8%','Прогноз окончания через 2–3 рабочих дня.']);
+    if(state.building==='lab')list.push(['red','Один Informator offline','Последний heartbeat более 20 минут назад.']);
+    $('#alertsBox').innerHTML=list.map(a=>`<div class="alert"><span class="dot ${a[0]}"></span><div><b>${a[1]}</b><div style="color:var(--muted)">${a[2]}</div></div></div>`).join('');
+  }
+
+  $('#periodSegment').addEventListener('click',e=>{
+    const btn=e.target.closest('button[data-period]'); if(!btn)return;
+    state.period=btn.dataset.period;
+    $$('#periodSegment button').forEach(b=>b.classList.toggle('active',b===btn));
+    renderOverview();
+  });
+  $('#buildingSelect').addEventListener('change',e=>{state.building=e.target.value;renderOverview();});
+  $('#gradeSelect').addEventListener('change',e=>{state.grade=e.target.value;renderOverview();});
+
+  const modules=[
+    {id:'attendance',icon:'🚪',name:'Посещаемость',desc:'СКУД, вход/выход, опоздания, динамика и корпуса.',base:[94.5,43,75,1284],labels:['Посещаемость','Опоздания','Не пришли','В школе'],notes:['Сравнение с нормой по дню недели','Пики входа и опозданий','Классы с отклонениями','Динамика по корпусам']},
+    {id:'grades',icon:'⭐',name:'Успеваемость',desc:'Средний балл, число оценок и динамика предметов.',base:[4.17,624,711,110],labels:['Средний балл','Пятёрок','Четвёрок','Двоек'],notes:['Динамика среднего балла','Распределение оценок','Предметы с изменениями','Классы с резкими отклонениями']},
+    {id:'homework',icon:'📝',name:'Домашняя нагрузка',desc:'ДЗ по классам, предметам и дням недели.',base:[287,6,4.2,9],labels:['ДЗ','Классов >7 ДЗ','Среднее / класс','Максимум'],notes:['Перегруженные дни','Сравнение параллелей','Предметы с наибольшей нагрузкой','Баланс недели']},
+    {id:'rooms',icon:'🏫',name:'Кабинеты',desc:'Загрузка помещений и свободные окна.',base:[82,47,12,7],labels:['Загрузка, %','Занято','Свободно','<40% загрузки'],notes:['Тепловая карта по урокам','Резерв помещений','Пиковые часы','Конфликты расписания']},
+    {id:'print',icon:'🖨',name:'Печать',desc:'Страницы, тонер, ошибки и стоимость.',base:[87324,3,2,191000],labels:['Страниц','Тонер <15%','Ошибок','Прогноз, ₽'],notes:['Стоимость страницы','Аномальная печать','Остатки расходников','Прогноз закупок']},
+    {id:'it',icon:'💻',name:'IT / Informator',desc:'ПК, панели, приставки, Wi‑Fi и доступность.',base:[98.1,231,54,10],labels:['Online, %','ПК online','Панели online','Informator online'],notes:['Устройства offline','История доступности','Стабильность сети','Контроль панелей F2C']},
+    {id:'teachers',icon:'👨‍🏫',name:'Нагрузка учителей',desc:'Уроки, замены, окна и распределение нагрузки.',base:[312,6,29,2],labels:['Уроков','Замен','Окон','>8 уроков'],notes:['Нагрузка по дням','Замены','Окна','Аномально высокая нагрузка']},
+    {id:'ai',icon:'AI',name:'AI-сводки',desc:'Аномалии, объяснения и утренние отчёты.',base:[8,2,4,17],labels:['Сигналов','Критических','Средних','Запросов'],notes:['Утренний отчёт директора','Объяснение отклонений','Естественный язык','Сводка по выбранному периоду']}
+  ];
+  $('#moduleGrid').innerHTML=modules.map(m=>`<button type="button" class="module" data-module="${m.id}"><div style="font-size:20px">${m.icon}</div><h4>${m.name}</h4><p>${m.desc}</p><div class="mini">Открыть интерактивный экран →</div></button>`).join('');
+
+  function detailSeries(module,period){
+    const mul={day:1,week:1.06,month:1.13,term:1.2}[period];
+    return Array.from({length:10},(_,i)=>Math.max(1,(module.base[0]||10)*(0.72+i*.035+(i%3)*.025)*mul));
+  }
+  function renderDetail(){
+    if(!state.module)return;
+    const m=modules.find(x=>x.id===state.module);
+    const mul={day:1,week:5,month:20,term:55}[state.detailPeriod];
+    $('#detailTitle').textContent=m.name;
+    $('#detailCaption').textContent='интерактивный пример';
+    $('#detailMetrics').innerHTML=m.labels.map((label,i)=>{
+      let v=m.base[i];
+      if(i>0 && typeof v==='number' && v>10 && m.id!=='grades' && m.id!=='it') v=Math.round(v*(state.detailPeriod==='day'?1:state.detailPeriod==='week'?1.15:state.detailPeriod==='month'?1.35:1.55));
+      if(m.id==='grades' && i===0)v=v.toFixed(2).replace('.',',');
+      else if(m.id==='rooms' && i===0)v=v+'%';
+      else if(m.id==='it' && i===0)v=v.toFixed(1).replace('.',',')+'%';
+      else if(m.id==='print' && i===3)v=rub(v);
+      else if(typeof v==='number')v=fmt(v);
+      return `<div class="metric"><span>${label}</span><b>${v}</b></div>`;
+    }).join('');
+    const series=detailSeries(m,state.detailPeriod), base=series.map((v,i)=>v*(.93+(i%2)*.03));
+    lineChart($('#detailChart'),series,base);
+    $('#detailNotes').innerHTML=m.notes.map((n,i)=>`<div class="alert"><span class="dot ${i===0?'blue':i===1?'yellow':'green'}"></span><div><b>${n}</b><div style="color:var(--muted)">Пример аналитического блока для этого модуля.</div></div></div>`).join('');
+  }
+  $('#moduleGrid').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-module]'); if(!btn)return;
+    state.module=btn.dataset.module; state.detailPeriod='day'; $('#detailPeriod').value='day';
+    $('#detailPanel').classList.add('show'); renderDetail();
+    $('#detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  $('#detailPeriod').addEventListener('change',e=>{state.detailPeriod=e.target.value;renderDetail();});
+  $('#detailRefresh').addEventListener('click',renderDetail);
+  $('#detailClose').addEventListener('click',()=>$('#detailPanel').classList.remove('show'));
+
+  const gantt=[
+    ['Архитектура и прототип',1,2,'dev'],['Модель данных / роли',2,4,'dev'],['Коннектор ЭЖ',3,6,'dev'],['Коннектор СКУД',4,7,'dev'],
+    ['Расписание / кабинеты',5,7,'dev'],['Главный dashboard',5,8,'dev'],['Детальные дашборды',7,9,'dev'],['Аномалии / уведомления',8,10,'dev'],
+    ['Пилот: школа',9,12,'pilot'],['Исправления пилота',11,13,'dev'],['Документация / деплой',13,15,'dev'],['Закупочный комплект',14,16,'sales'],
+    ['Коммерческие пилоты',15,20,'sales'],['Print / IT',16,19,'dev'],['AI-сводки',18,21,'dev'],['Масштабирование',18,24,'ops']
+  ];
+  $('#ganttHead').innerHTML='<div></div>'+Array.from({length:24},(_,i)=>`<div>${i+1}</div>`).join('');
+  $('#ganttRows').innerHTML=gantt.map(r=>`<div class="grow"><div class="glabel">${r[0]}</div>${Array.from({length:24},(_,i)=>`<div class="gcell ${i+1>=r[1]&&i+1<=r[2]?r[3]:''}"></div>`).join('')}</div>`).join('');
+
+  const scenarioDefs={
+    base:{schools:50,check:349000,renew:169000,conv:12,cost:80000,cac:35000},
+    safe:{schools:25,check:299000,renew:149000,conv:8,cost:95000,cac:50000},
+    growth:{schools:100,check:389000,renew:189000,conv:18,cost:70000,cac:25000}
+  };
+  function renderCalculator(){
+    const schools=+$('#schoolsRange').value,check=+$('#checkRange').value,renew=+$('#renewRange').value,conv=+$('#convRange').value/100,cost=+$('#costRange').value,cac=+$('#cacRange').value;
+    $('#schoolsOut').textContent=fmt(schools);$('#checkOut').textContent=rub(check);$('#renewOut').textContent=rub(renew);$('#convOut').textContent=Math.round(conv*100)+'%';$('#costOut').textContent=rub(cost);$('#cacOut').textContent=rub(cac);
+    const rev=schools*check,arr=schools*renew,gross=schools*(check-cost-cac),leads=Math.ceil(schools/Math.max(.01,conv));
+    $('#rev1').textContent=rub(rev);$('#arr').textContent=rub(arr);$('#gross').textContent=rub(gross);$('#leadCount').textContent=fmt(leads);
+    $('#unitMargin').textContent=rub(check-cost-cac);$('#cacCard').textContent=rub(cac);$('#payback').textContent=((cac/Math.max(1,check-cost-cac))*12).toFixed(1)+' мес.';$('#ltv').textContent=rub((check-cost-cac)+2*renew);
+    $('#funnel1').textContent='Целевые контакты ≈ '+fmt(Math.ceil(leads*2.5));$('#funnel2').textContent='Квалифицированные лиды '+fmt(leads);$('#funnel3').textContent='Пилоты ≈ '+fmt(Math.ceil(schools/.45));$('#funnel4').textContent='Контракты '+fmt(schools);
+    $('#scaleTable').innerHTML=[10,25,50,100,300,1000].map(n=>`<tr><td>${n}</td><td>${rub(n*check)}</td><td>${rub(n*renew)}</td><td>${rub(n*cost)}</td><td>${rub(n*cac)}</td><td>${rub(n*(check-cost-cac))}</td></tr>`).join('');
+  }
+  ['#schoolsRange','#checkRange','#renewRange','#convRange','#costRange','#cacRange'].forEach(sel=>$(sel).addEventListener('input',renderCalculator));
+  $('#scenarioTabs').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-scenario]'); if(!btn)return;
+    $$('#scenarioTabs button').forEach(b=>b.classList.toggle('active',b===btn));
+    const s=scenarioDefs[btn.dataset.scenario];
+    $('#schoolsRange').value=s.schools;$('#checkRange').value=s.check;$('#renewRange').value=s.renew;$('#convRange').value=s.conv;$('#costRange').value=s.cost;$('#cacRange').value=s.cac;
+    renderCalculator();
+  });
+
+  const hoursRows=[
+    ['Квалификация + аудит','Менеджер + инженер',4],['Демо + КП','Менеджер + инженер',3],['Закупочные материалы','Менеджер',2],
+    ['Подключение источников','2 IT-инженера',12],['Настройка аналитики','IT-инженер',7],['QA / сверка','2 IT-инженера',5],
+    ['Обучение','Инженер / CSM',3],['Запуск','Инженер',4],['Поддержка за год','Инженер',8]
+  ];
+  function renderSales(){
+    const deals=+$('#dealsRange').value,hour=+$('#hourRange').value,one=hoursRows.reduce((s,r)=>s+r[2],0),total=one*deals;
+    $('#dealsOut').textContent=fmt(deals);$('#hourOut').textContent=rub(hour);$('#hoursHeader').textContent=`Для ${deals} школ`;
+    $('#hoursBody').innerHTML=hoursRows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${fmt(r[2]*deals)} ч</td></tr>`).join('');
+    $('#hoursPerSchool').textContent=one+' ч';$('#hoursTotal').textContent=fmt(total)+' ч';$('#fteMonths').textContent=(total/160).toFixed(1);$('#laborCost').textContent=rub(total*hour);
+  }
+  $('#dealsRange').addEventListener('input',renderSales);$('#hourRange').addEventListener('input',renderSales);
+
+  renderOverview(); renderCalculator(); renderSales();
+})();
+</script>
+</body>
+</html>
